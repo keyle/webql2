@@ -1,4 +1,3 @@
-
 module utils {
 
     export class Color {

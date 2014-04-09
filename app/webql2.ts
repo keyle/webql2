@@ -1,6 +1,8 @@
 ///<reference path="utils.ts"/>
+///<reference path="query.ts"/>
 declare var process;
 import Color = utils.Color;
+import Query = webql2.Query;
 
 module webql2 {
     export class Webql {
@@ -11,6 +13,13 @@ module webql2 {
             var tokens:Token[] = Parser.tokenize(args);
             if (!Parser.validate(tokens)) throw(Errors[Errors.MISSING_MINIMUM_ARGUMENTS_SELECT_AND_FROM]);
             log(JSON.stringify(tokens, null, 2));
+
+            var query = Query
+                .create()
+                .from("http://noben.org")
+                .select('a, a.href')
+                .where('a', 'contains', 'keyle')
+                .init();
         }
 
         static getArgs() {
@@ -55,8 +64,8 @@ module webql2 {
             var fromFound = false,
                 selectFound = false;
             tokens.forEach((token:Token)=> {
-                if (token.name == "_from") fromFound = true;
-                else if (token.name == "_select") selectFound = true;
+                if (token.name == "from") fromFound = true;
+                else if (token.name == "select") selectFound = true;
             });
             return fromFound && selectFound;
         }

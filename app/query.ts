@@ -1,5 +1,8 @@
 declare var require;
 
+var cheerio = require("cheerio"),
+    request = require("request");
+
 module webql2 {
     export class Query {
         private _from:string;
@@ -72,7 +75,37 @@ module webql2 {
         }
 
         public init() {
-            // do stuff!
+
+            if (!this._from || !this._select) throw('from & select are required.');
+            var url = this._from,
+                query = this;
+            request(url, function (err, resp, body) {
+                if (err) throw(err);
+                query.parse(body);
+            });
+        }
+
+        public parse(body) {
+            console.log('-> ' + this._select);
+            var $ = cheerio.load(body),
+                linksObjects = $(this._select),
+                links = Array.prototype.slice.call(linksObjects);
+            links.forEach((link) => {
+
+                if (this._whereCondition) {
+                    if (this._whereCondition === "contains") {
+                        if(this._wherePredicate1.indexOf('.') > -1) {
+                            //TODO
+                        }
+                    } else if (this._whereCondition === "!contains") {
+
+                    } else if (this._whereCondition === "match") {
+
+                    }
+                }
+
+                console.log($(link).parent().html());
+            });
         }
     }
 }

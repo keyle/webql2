@@ -19,17 +19,116 @@ var utils;
     })();
     utils.Color = Color;
 })(utils || (utils = {}));
+var cheerio = require("cheerio"), request = require("request");
+
+var webql2;
+(function (webql2) {
+    var Query = (function () {
+        function Query() {
+            this._shuffle = false;
+            this._first = false;
+            this._last = false;
+            this._limit = 0;
+            this._skip = 0;
+            this._nth = 0;
+            this._to = "csv";
+        }
+        Query.create = function () {
+            return new Query();
+        };
+
+        Query.prototype.from = function (from) {
+            this._from = from;
+            return this;
+        };
+
+        Query.prototype.select = function (select) {
+            this._select = select;
+            return this;
+        };
+
+        Query.prototype.where = function (predicate1, condition, predicate2) {
+            this._wherePredicate1 = predicate1;
+            this._whereCondition = condition;
+            this._wherePredicate2 = predicate2;
+            return this;
+        };
+
+        Query.prototype.shuffle = function () {
+            this._shuffle = true;
+            return this;
+        };
+
+        Query.prototype.first = function () {
+            this._first = true;
+            return this;
+        };
+
+        Query.prototype.last = function () {
+            this._last = true;
+            return this;
+        };
+
+        Query.prototype.limit = function (num) {
+            this._limit = num;
+            return this;
+        };
+
+        Query.prototype.skip = function (num) {
+            this._skip = num;
+            return this;
+        };
+
+        Query.prototype.nth = function (num) {
+            this._nth = num;
+            return this;
+        };
+
+        Query.prototype.to = function (target) {
+            this._to = target;
+            return this;
+        };
+
+        Query.prototype.init = function () {
+            if (!this._from || !this._select)
+                throw ('from & select are required.');
+            var url = this._from, query = this;
+            request(url, function (err, resp, body) {
+                if (err)
+                    throw (err);
+                query.parse(body);
+            });
+        };
+
+        Query.prototype.parse = function (body) {
+            var _this = this;
+            console.log('-> ' + this._select);
+            var $ = cheerio.load(body), linksObjects = $(this._select), links = Array.prototype.slice.call(linksObjects);
+            links.forEach(function (link) {
+                if (_this._whereCondition) {
+                }
+
+                console.log($(link).parent().html());
+            });
+        };
+        return Query;
+    })();
+    webql2.Query = Query;
+})(webql2 || (webql2 = {}));
 var Color = utils.Color;
+var Query = webql2.Query;
 
 var webql2;
 (function (webql2) {
     var Webql = (function () {
         function Webql() {
             var args = Webql.getArgs();
-            var tokens = Parser.analyze(args);
+            var tokens = Parser.tokenize(args);
             if (!Parser.validate(tokens))
                 throw (Errors[2 /* MISSING_MINIMUM_ARGUMENTS_SELECT_AND_FROM */]);
             log(JSON.stringify(tokens, null, 2));
+
+            var query = webql2.Query.create().from("http://noben.org").select('a, a.href').where('a', 'contains', 'keyle').init();
         }
         Webql.getArgs = function () {
             var args = [];
@@ -50,7 +149,7 @@ var webql2;
     var Parser = (function () {
         function Parser() {
         }
-        Parser.analyze = function (arr) {
+        Parser.tokenize = function (arr) {
             var tokens = [], keywords = Parser.keywords;
             arr.forEach(function (word, idx) {
                 if (word in keywords) {
